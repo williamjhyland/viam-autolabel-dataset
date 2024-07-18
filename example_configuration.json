@@ -1,0 +1,9 @@
+{
+    "location_id": "YOUR LOCATION ID",
+    "part_id": "YOUR PART ID",
+    "app_api_key": "YOUR APP API KEY",
+    "app_api_key_id": "YOUR APP API KEY ID",
+    "org_id": "YOUR ORG ID",
+    "dataset_id": "YOUR DATA SET ID",
+    "image_directory": "images"
+}
