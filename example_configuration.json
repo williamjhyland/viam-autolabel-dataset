@@ -1,9 +1,10 @@
 {
-    "location_id": "YOUR LOCATION ID",
-    "part_id": "YOUR PART ID",
-    "app_api_key": "YOUR APP API KEY",
-    "app_api_key_id": "YOUR APP API KEY ID",
-    "org_id": "YOUR ORG ID",
-    "dataset_id": "YOUR DATA SET ID",
-    "image_directory": "images"
+    "app_api_key": "API KEY HERE",
+    "app_api_key_id": "API KEY ID HERE",
+    "part_id": "PART ID HERE (FOR UPLOAD ONLY)",
+    "org_id": "ORG ID HERE",
+    "location_id": "LOCATION ID HERE",
+    "dataset_id": "DATA SET ID HERE",
+    "image_directory": "IMAGE DIRECTORY FOR UPLOAD HERE",
+    "upload_tags": "TAGS FOR ALL UPLOADED IMAGES"
 }

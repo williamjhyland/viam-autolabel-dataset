@@ -47,6 +47,7 @@ async def autoLabelDataset(viamClient: ViamClient, robotClient: RobotClient, dat
         dataset_id=dataset_id,
         tags=None
         )
+    print("Starting loop...")
     while True:
         # Get the data from Viam
         # NOTE: This is incurring download costs...
@@ -56,6 +57,8 @@ async def autoLabelDataset(viamClient: ViamClient, robotClient: RobotClient, dat
         if not data:
             print(data)
             break
+
+        print("Got image...")
         
         # Create an Image
         image = Image.open(BytesIO(data[0].binary))
@@ -64,7 +67,7 @@ async def autoLabelDataset(viamClient: ViamClient, robotClient: RobotClient, dat
 
         # If the data is not already labeled
         if "auto-labeled" not in data[0].metadata.capture_metadata.tags:
-
+            print("Image not auto-labeled")
             # RECREATE the BinaryID???
             binaryID = BinaryID(
                 file_id=data[0].metadata.id,
@@ -73,20 +76,22 @@ async def autoLabelDataset(viamClient: ViamClient, robotClient: RobotClient, dat
             )
             
             # Get visionServices from Robot
-            objectDetection = VisionClient.from_robot(robotClient, "myVision")
+            print("Running florence")
+            objectDetection = VisionClient.from_robot(robotClient, "myFlorenceVision")
+            print("Running ChatGPT")
             objectClassifier = VisionClient.from_robot(robotClient, "myChatGPTVision")
             scoreThreshold = 0.3
-            validLabels = ['Chair']
+            validLabels = ['food']
 
             # Get detections from the vision service
             detections = await objectDetection.get_detections(image=viamImage)
+            print("Florence Detections: ", detections)
 
             # First filter: Filter detections based on confidence score
             filtered_score_detections = [detection for detection in detections if detection.confidence > scoreThreshold]
 
             # Second filter: Further filter detections based on valid labels
             filtered_detections = [detection for detection in filtered_score_detections if detection.class_name in validLabels]
-
 
             # Assuming image.size gives (width, height)
             image_width, image_height = image.size
@@ -100,7 +105,7 @@ async def autoLabelDataset(viamClient: ViamClient, robotClient: RobotClient, dat
                 cropped_viam_image = pil_to_viam_image(cropped_image.convert('RGB'), CameraMimeType.JPEG)
 
                 # Get the ChatGPT defined label
-                labels = await objectClassifier.get_classifications(image=cropped_viam_image, count=1, extra={"question": "what is the person wearing?"})
+                labels = await objectClassifier.get_classifications(image=cropped_viam_image, count=1, extra={"question": "Here is a list of 20 ingredients: Udon, Broccoli, Carrots, Mushrooms, Lo Mein, Cabbage, Rice Noodles, Penne, Cavatappi, Red Onion, Tortelloni, Roasted Zucchini, Grilled Chicken, Shrimp, Steak, Meatballs, Tofu, Spaghetti, Zoodles, Tomatoes. Passing only the ingredients back as an answer. Which of these ingredients are in this image?"})
                 label = labels[0].class_name
                 print(labels, label)
 
@@ -136,8 +141,10 @@ async def main():
     robot_client: RobotClient = await robot_connect(api_key, api_key_id)
 
     # Iterate over all images in the dataset
+    print("Labeling data start")
     await autoLabelDataset(viam_client, robot_client, dataset_id)
     # Move all the images with the binary IDs to the appropriate data set
+    print("Labeling data complete")
     viam_client.close()
 
 if __name__ == "__main__":
