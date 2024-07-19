@@ -37,12 +37,11 @@ def load_configuration(file_path):
     return config
 
 # Upload Images to Viam Data Set
-async def autoLabelDataset(viamClient: ViamClient, robotClient: RobotClient, dataset_id: str):
+async def autoLabelDataset(viamClient: ViamClient, robotClient: RobotClient, dataset_id: str, config):
     data_client: DataClient = viamClient.data_client
     my_data = []
     last = None
-    # NOTE: I want to filter for all none labeled images (or images not labeled "auto-label")
-    # TODO: Figure out if this can be done
+    # Filter for data
     my_filter = create_filter(
         dataset_id=dataset_id,
         tags=None
@@ -50,9 +49,6 @@ async def autoLabelDataset(viamClient: ViamClient, robotClient: RobotClient, dat
     print("Starting loop...")
     while True:
         # Get the data from Viam
-        # NOTE: This is incurring download costs...
-        # TODO: Clarify if this is a dumb way to get the data.
-
         data, count, last = await data_client.binary_data_by_filter(filter=my_filter, last=last, include_binary_data=True, limit=1)
         if not data:
             print(data)
@@ -71,8 +67,8 @@ async def autoLabelDataset(viamClient: ViamClient, robotClient: RobotClient, dat
             # RECREATE the BinaryID???
             binaryID = BinaryID(
                 file_id=data[0].metadata.id,
-                organization_id='0b5b5b7c-d61a-4984-b294-6d73a9076adb',
-                location_id='0p1kevpomd'
+                organization_id= config.get("org_id", ""),
+                location_id=config.get("location_id", ""),
             )
             
             # Get visionServices from Robot
@@ -142,7 +138,7 @@ async def main():
 
     # Iterate over all images in the dataset
     print("Labeling data start")
-    await autoLabelDataset(viam_client, robot_client, dataset_id)
+    await autoLabelDataset(viam_client, robot_client, dataset_id, config)
     # Move all the images with the binary IDs to the appropriate data set
     print("Labeling data complete")
     viam_client.close()
